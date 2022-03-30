@@ -7,6 +7,10 @@ int main() {
     int n;
     int arr[MAX_N][MAX_N] = {0, };
     scanf(" %d", &n);
+    if (n % 2 == 0) {
+        printf("n은 홀수여야 합니다.");
+        return 0;
+    }
 
     int k = n;
     int y = 0;
@@ -47,20 +51,21 @@ int main() {
         printf("\n");
     }
 
+    printf("\n");
+
     y = 0;
     x = n / 2;
     int half = (n + 1) / 2;
     for (; y < half; y++) {
         for (int j = x; j >= 0; j--) {
-            printf("%d %d\n", y, x);
-//            printf("%d ", arr[y][x]);
+            printf("%d ", arr[y][j]);
         }
         x += 1;
     }
+    x -= 2;
     for (; y < n; y++) {
         for (int j = x; j >= 0; j--) {
-            printf("%d %d\n", y, x);
-//            printf("%d ", arr[y][x]);
+            printf("%d ", arr[y][j]);
         }
         x -= 1;
     }
