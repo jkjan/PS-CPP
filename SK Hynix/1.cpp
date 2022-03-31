@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <queue>
 #include <set>
@@ -9,94 +8,101 @@
 #define MASKED 'M'
 #define UNMASKED 'N'
 #define CONFIRMED 'C'
-#define EMPTY '-'
 
 using namespace std;
-typedef pair<int, int> pos;
+
+typedef struct _pos {
+    int y, x;
+} pos;
 
 int len;
 int dy[] = {-1, 1, 0, 0};
 int dx[] = {0, 0, -1, 1};
+set<pos> infectedPeople;
 
 int solution(vector<string>);
-void bfs(vector<string>&);
+void bfs(vector<string>& theater, pos confirmedPerson);
 
 int main() {
-
-
+    vector<string> theater = {
+            "MNMN",
+            "MNMN",
+            "-C-N",
+            "MNMM"
+    };
+    solution(theater);
     return 0;
 }
-
 
 int solution(vector<string> theater) {
     len = theater.size();
+    int answer;
 
-    return 0;
-}
-
-bool isValid(pos p) {
-    int y = p.first; 
-    int x = p.second;
-    return 0 <= y and y < len and 0 <= x and x < len;
-}
-
-bool isVisited(pos p, int dist[][MAX_N]) {
-    int y = p.first;
-    int x = p.second;
-    return dist[p.first][p.second] == INF;
-}
-
-bool isInfecting(pos p, int dist[][MAX_N], vector<string>& theater) {
-    int y = p.first;
-    int x = p.second;
-    if (theater[y][x] == EMPTY) {
-        return false;
-    }
-    else if (theater[y][x] == MASKED and dist[y][x] > 2) {
-        return false;
-    }
-    else if (theater[y][x] == UNMASKED and dist[y][x] > 3) {
-        return false;
-    }
-    return true;
-}
-
-void searchNextNode(pos p, int distanceFromConfirmedPerson[][MAX_N], queue<pos>& willVisit) {
-    int y = p.first;
-    int x = p.second;
-    for (int i = 0; i < 4; ++i) {
-        int adjY = y + dy[i];
-        int adjX = x + dx[i];
-        pos adj = {adjY, adjX};
-
-        if (isValid(adj)) {
-            if (not isVisited(adj, distanceFromConfirmedPerson)) {
-                int newDistance = distanceFromConfirmedPerson[y][x] + 1;
-                distanceFromConfirmedPerson[adjY][adjX] = newDistance;
-                willVisit.push(adj);
+    for (int i = 0; i < len; ++i) {
+        for (int j = 0; j < len; ++j) {
+            if (theater[i][j] == CONFIRMED) {
+                pos confirmedPerson = {i, j};
+                bfs(theater, confirmedPerson);
             }
         }
     }
+
+    answer = infectedPeople.size();
+    return answer;
 }
 
-void initArr(int arr[][MAX_N], int x) {
-    memset(arr, x, sizeof(arr));
+bool isValid(pos p) {
+    return 0 <= p.y and p.y < len and 0 <= p.x and p.x < len;
 }
 
-void bfs(set<pos>& infectedPeople, vector<string>& theater, pos confirmedPerson) {
-    queue<pos> willVisit;
-    int distanceFromConfirmedPerson[MAX_N][MAX_N];
-    memset(distanceFromConfirmedPerson, INF, sizeof(distanceFromConfirmedPerson));
-    distanceFromConfirmedPerson[confirmedPerson.first][confirmedPerson.second] = 0;
-    willVisit.push(confirmedPerson);
+bool isVisited(pos p, int dist[][MAX_N]) {
+    return dist[p.y][p.x] == INF;
+}
 
-    while (!willVisit.empty()) {
-        pos nowVisit = willVisit.front();
+pos getAdj(pos p, int n) {
+    return {p.y + dy[n], p.x + dx[n]};
+}
 
-        if (isInfecting(nowVisit, distanceFromConfirmedPerson, theater)) {
-            infectedPeople.insert(nowVisit);
+void searchNextNode(pos p, int dist[][MAX_N], queue<pos>& nodesToVisit) {
+    for (int i = 0; i < 4; ++i) {
+        pos adj = getAdj(p, i);
+
+        if (isValid(adj) and
+            not isVisited(adj, dist)) {
+                int newDistance = dist[p.y][p.x] + 1;
+                dist[adj.y][adj.x] = newDistance;
+                nodesToVisit.push(adj);
+            }
         }
+}
 
-        searchNextNode(nowVisit, distanceFromConfirmedPerson, willVisit);
+void initArr(pos p, int dist[][MAX_N]) {
+    memset(dist, INF, MAX_N * MAX_N);
+    dist[p.y][p.x] = 0;
+}
+
+void initBFS(pos p, int arr[][MAX_N], queue<pos> &nodesToVisit) {
+    initArr(p, arr);
+    nodesToVisit.push(p);
+}
+
+void infect(pos p, int dist[][MAX_N], vector<string>& theater) {
+    if ((theater[p.y][p.x] == MASKED and dist[p.y][p.x] <= 2) or
+        (theater[p.y][p.x] == UNMASKED and dist[p.y][p.x] <= 3)) {
+        infectedPeople.insert(p);
+    }
+}
+
+void bfs(vector<string>& theater, pos confirmedPerson) {
+    int distanceFromConfirmedPerson[MAX_N][MAX_N];
+    queue<pos> nodesToVisit;
+
+    initBFS(confirmedPerson, distanceFromConfirmedPerson, nodesToVisit);
+
+    while (!nodesToVisit.empty()) {
+        pos nowVisit = nodesToVisit.front();
+        nodesToVisit.pop();
+        infect(nowVisit, distanceFromConfirmedPerson, theater);
+        searchNextNode(nowVisit, distanceFromConfirmedPerson, nodesToVisit);
     }
 }
