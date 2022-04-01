@@ -30,7 +30,8 @@ int main() {
             "-C-N",
             "MNMM"
     };
-    solution(theater);
+    int answer = solution(theater);
+    printf("%d", answer);
     return 0;
 }
 
